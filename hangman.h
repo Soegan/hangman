@@ -54,3 +54,7 @@ void hangman(const char secret[]);
  * @return status code
  */
 int get_word(char secret[]);
+
+int letter_in_word (const char string[], const char symbol);
+
+int string_compare(const char str1[], const char str2[], int strLen);
