@@ -41,7 +41,7 @@ int is_word_guessed(const char secret[], const char letters_guessed[]) {
     
     for (int i = 0; i < secretLen; i++) {
         notFoundFlag = 1;
-        for (int j = 0; i < lettersLen; j++) {
+        for (int j = 0; j < lettersLen; j++) {
             if (letters_guessed[j] == secret[i]) {
                 notFoundFlag = 0;
                 break;
@@ -98,9 +98,26 @@ void get_available_letters(const char letters_guessed[], char available_letters[
             x++;
         }
     }
+    available_letters[x] = '\0';
 }
 
+int letter_in_word (const char string[], const char symbol) {
+    for (int i = 0; i < strlen(string); i++) {
+        if (symbol == string[i]) {
+            return 1;
+        }
+    }
+    return 0;
+}
 
+int string_compare(const char str1[], const char str2[], int strLen) {
+    for (int i = 0; i < strLen; i++) {
+        if (str1[i] != str2[i]) {
+            return 0;
+        }
+    }
+    return 1;
+}
 
 
 void hangman(const char secret[]) {
@@ -108,12 +125,15 @@ void hangman(const char secret[]) {
     int secretLen = strlen(secret);
     int attempts = 8;
     char letters_guessed[27] = "";
-    int letters_guessed_index;
+    int letters_guessed_index = 0;
     char available_letters[27];
     char input[255] = "";
+    char guessed_word[secretLen];
 
     printf("Welcome to the game, Hangman!\n");
     printf("I am thinking of a word that is %d letters long.\n", secretLen);
+
+    get_guessed_word(secret, letters_guessed, guessed_word);
 
     while (attempts > 0 && !is_word_guessed(secret, letters_guessed)) {
         printf("-------------\n");
@@ -126,29 +146,58 @@ void hangman(const char secret[]) {
         fgets(input, 255, stdin);
         
         int inputLen = strlen(input) - 1;
+
         if (inputLen > 1) {
             // string
+            if (inputLen != secretLen) {
+                printf("Sorry, bad guess. The word was goal.\n");
+                attempts = 0;
+                break;
+            }
+            if (string_compare(secret, input, secretLen)) {
+                printf("Congratulations, you won!\n");
+                break;
+            } else {
+                printf("Sorry, bad guess. The word was goal.\n");
+                attempts = 0;
+                break;
+            }
         } else {
             // char
             char symbol = input[0];
             if (symbol >= 65 && symbol <= 90) {
                 symbol += 32;
             }
-            if (symbol <= 97 || symbol >= 122) {
+            if (symbol < 97 || symbol > 122) {
                 printf("Wrong symbol!\n");
                 continue;
             }
-            letters_guessed[letters_guessed_index] = symbol;
-            letters_guessed_index++;
+ 
+            if (letter_in_word(letters_guessed, symbol)) {
+                printf("Oops! You've already guessed that letter: ");
+            } else {
+                letters_guessed[letters_guessed_index++] = symbol;
+                if (letter_in_word(secret, symbol)) {
+                    printf("Good guess: ");
+                    get_guessed_word(secret, letters_guessed, guessed_word);
+                } else {
+                    printf("Oops! That letter is not in my word: ");
+                    attempts--;
+            }
+            printf("%s\n", guessed_word);
+            }
         }
-        printf("%s\n", input);
-        
 
-        attempts--;
-    }
+        if (attempts == 0) {
+            printf("-------------\n");
+            printf("Sorry, you ran out of guesses. The word was %s.\n", secret);
+        }
+        if (is_word_guessed(secret, letters_guessed)) {
+            printf("-------------\n");
+            printf("%s, %s\n", secret, letters_guessed);
+            printf("Congratulations, you won!\n");
+        }
 
     printf("-------------\n");
-
-
-
+    }
 }
